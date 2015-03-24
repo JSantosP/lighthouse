@@ -34,3 +34,4 @@ content: <value>
 - Persistent key-values
 - Deploy of diferent value types
 - Pretty index page :-)
+- Add TTL to values.
