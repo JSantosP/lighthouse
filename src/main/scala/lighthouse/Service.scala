@@ -3,7 +3,8 @@ package lighthouse
 import akka.actor.{ActorRef, Props, Actor}
 import lighthouse.utils.Loggable
 import spray.can.Http
-import spray.http.HttpRequest
+import spray.http.HttpMethods._
+import spray.http._
 
 import model._
 
@@ -29,6 +30,9 @@ with Loggable {
       s"[From] ${conn.remoteAddress} " +
       s"[To] ${conn.localAddress}")
       sender ! Http.Register(self)
+
+    case req @ HttpRequest(GET, uri, _, _, _) if uri.toRelative.toString() == "/" =>
+      sender() ! HttpResponse(entity="Lighthouse is up!")
 
     case req: HttpRequest =>
       val target = resourceActors.get(req.uri.toRelative.toString())
