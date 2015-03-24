@@ -1,3 +1,7 @@
+import NativePackagerKeys._
+
+packageArchetype.java_application
+
 name := "lighthouse"
 
 version := "1.0"
