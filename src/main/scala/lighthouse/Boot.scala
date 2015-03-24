@@ -4,11 +4,11 @@ import akka.actor.ActorSystem
 import akka.io.IO
 import com.typesafe.config.ConfigFactory
 import spray.can.Http
-
+import util.Properties
 
 object Boot extends App
-with LightHouse
-with Configuration {
+  with LightHouse
+  with Configuration {
 
   implicit val system = ActorSystem("lighthouse")
 
@@ -35,7 +35,9 @@ trait Configuration {
   val config = ConfigFactory.load("server.conf")
 
   val bindingIp = config.getString("app.server.bind.ip")
-  val bindingPort = config.getInt("app.server.bind.port")
+  val bindingPort = Properties.envOrElse(
+    "PORT",
+    config.getString("app.server.bind.port")).toInt
   val resourceList = config.getStringList("app.server.resources").toList
 
 }
