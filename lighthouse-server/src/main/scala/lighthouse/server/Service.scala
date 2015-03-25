@@ -1,4 +1,4 @@
-package lighthouse
+package lighthouse.server
 
 import akka.actor.{ActorRef, Props, Actor}
 import lighthouse.utils.Loggable
@@ -6,7 +6,7 @@ import spray.can.Http
 import spray.http.HttpMethods._
 import spray.http._
 
-import model._
+import lighthouse.model._
 
 class Service(
   resourceMap: Map[LightHouse#Resource, LightHouse#Path]) extends Actor

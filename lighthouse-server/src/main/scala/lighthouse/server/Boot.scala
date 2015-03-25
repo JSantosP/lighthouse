@@ -1,4 +1,4 @@
-package lighthouse
+package lighthouse.server
 
 import akka.actor.ActorSystem
 import akka.io.IO

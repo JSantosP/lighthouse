@@ -1,4 +1,4 @@
-package lighthouse
+package lighthouse.server
 
 import akka.actor.{Props, Actor}
 import lighthouse.utils.Loggable

@@ -2,7 +2,7 @@ import NativePackagerKeys._
 
 packageArchetype.java_application
 
-name := "lighthouse"
+name := "lighthouse-server"
 
 version := "1.0"
 

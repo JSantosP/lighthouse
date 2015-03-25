@@ -1,11 +1,11 @@
-package lighthouse
+package lighthouse.server
 
 import spray.http._
 import spray.json._
 import spray.http.HttpMethods._
 import spray.http.ContentTypes._
 
-class StatefulTest extends TestKitSpec {
+class StatefulTest extends lighthouse.TestKitSpec {
 
   import serializers._
   import SampleValues._
