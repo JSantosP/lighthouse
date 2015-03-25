@@ -1,4 +1,4 @@
-# lighthouse
+# lighthouse-server
 Simple key-value web registry based on a Spray REST server.
 
 ## Deploying keys
