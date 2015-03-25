@@ -1,5 +1,6 @@
 package lighthouse.server
 
+import scala.util.Try
 import akka.actor.ActorSystem
 import akka.io.IO
 import com.typesafe.config.ConfigFactory
@@ -35,9 +36,10 @@ trait Configuration {
   val config = ConfigFactory.load("server.conf")
 
   val bindingIp = config.getString("app.server.bind.ip")
-  val bindingPort = Properties.envOrElse(
-    "PORT",
-    config.getString("app.server.bind.port")).toInt
+  val bindingPort = Try(Option(System.getProperty("http.port")))
+    .map(_.get).recover {
+      case _: Throwable => config.getString("app.server.bind.port")
+    }.get.toInt
   val resourceList = config.getStringList("app.server.resources").toList
 
 }
