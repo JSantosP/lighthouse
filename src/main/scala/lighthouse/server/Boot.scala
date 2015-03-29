@@ -3,11 +3,13 @@ package lighthouse.server
 import scala.util.Try
 import akka.actor.ActorSystem
 import akka.io.IO
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config,ConfigFactory}
 import spray.can.Http
 import util.Properties
 
-object Boot extends App
+object Boot extends {
+  override val config = ConfigFactory.load("server.conf")
+} with App
   with LightHouse
   with Configuration {
 
@@ -33,7 +35,7 @@ trait Configuration {
 
   import scala.collection.JavaConversions._
 
-  val config = ConfigFactory.load("server.conf")
+  val config: Config
 
   val bindingIp = config.getString("app.server.bind.ip")
   val bindingPort = Try(Option(System.getProperty("http.port")))

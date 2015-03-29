@@ -1,6 +1,9 @@
 package lighthouse.server
 
-import akka.actor.{Props, Actor}
+import scala.reflect.ClassTag
+import scala.util.Try
+
+import akka.actor.{ Props, Actor }
 import lighthouse.utils.Loggable
 import spray.can.Http
 import spray.http.ContentTypes._
@@ -8,16 +11,23 @@ import spray.http.HttpMethods._
 import spray.http._
 import spray.json._
 import StatusCode.int2StatusCode
+import Stateful._
 
-import scala.reflect.ClassTag
-import scala.util.Try
+trait Stateful[S] extends Actor with Loggable {
 
-class Stateful[T: ClassTag : JsonFormat](
-  id: String,
-  parentUri: String,
-  initialState: Option[T]) extends Actor with Loggable{
+  implicit val ctag: ClassTag[S]
+  implicit val jsonFormat: JsonFormat[S]
 
-  private var state: Option[T] = initialState
+  type LastUpdate = Long
+  type State = (S, LastUpdate)
+
+  val id: String
+
+  val parentUri: String = "/"
+
+  val initialState: Option[S] = None
+
+  var state: Option[State] = initialState.map(_ -> Never)
 
   val path = s"$parentUri$id"
 
@@ -32,16 +42,18 @@ class Stateful[T: ClassTag : JsonFormat](
 
     case req @ HttpRequest(GET, uri, _, _, _) if uri.toRelative.toString() == path =>
       log.info(s"Received : $req")
-      sender() ! state.fold(ifEmpty = HttpResponse(status = 204))(state =>
-        HttpResponse(entity = implicitly[JsonFormat[T]].write(state).toString()))
+      sender() ! state.fold(ifEmpty = HttpResponse(status = 204)) {
+        case (s, _) =>
+          HttpResponse(entity = implicitly[JsonFormat[S]].write(s).toString())
+      }
 
-    case req @ HttpRequest(PUT, uri, headers, HttpEntity.NonEmpty(contentType,entity), _) if uri.toRelative.toString() == path && contentType==`application/json` =>
+    case req @ HttpRequest(PUT, uri, headers, HttpEntity.NonEmpty(contentType, entity), _) if uri.toRelative.toString() == path && contentType == `application/json` =>
       log.info(s"Received : $req")
-      sender() ! Try{
-        state = Some(implicitly[JsonFormat[T]].read(entity.asString.parseJson))
+      sender() ! Try {
+        state = Some(implicitly[JsonFormat[S]].read(entity.asString.parseJson) -> System.currentTimeMillis())
         HttpResponse(200)
-      }.recover{
-        case _:Throwable => HttpResponse(500)
+      }.recover {
+        case _: Throwable => HttpResponse(500)
       }.get
 
   }
@@ -55,10 +67,28 @@ class Stateful[T: ClassTag : JsonFormat](
 
 object Stateful {
 
-  def apply[T: ClassTag : JsonFormat](
-    id: String,
-    parentUri: String = "/",
-    initialState: Option[T] = None): Props = Props(
-    new Stateful[T](id, parentUri, initialState))
+  def apply[S](
+    _id: String,
+    _parentUri: String = "/",
+    _initialState: Option[S] = None,
+    deciduous: Boolean = false)(implicit ev1:ClassTag[S],ev2: JsonFormat[S]): Props = Props({
+    if (!deciduous)
+      new {
+        override implicit val ctag: ClassTag[S] = ev1
+        override implicit val jsonFormat: JsonFormat[S] = ev2
+        val id = _id
+        override val parentUri = _parentUri
+        override val initialState = _initialState
+      } with Stateful[S]
+    else new  {
+      override implicit val ctag: ClassTag[S] = ev1
+      override implicit val jsonFormat: JsonFormat[S] = ev2
+      val id = _id
+      override val parentUri = _parentUri
+      override val initialState = _initialState
+    } with Deciduous[S]
+  })
+
+  val Never = 0L
 
 }

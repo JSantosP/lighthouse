@@ -1,6 +1,6 @@
 package lighthouse.server
 
-import akka.actor.{ActorRef, Props, Actor}
+import akka.actor.{ ActorRef, Props, Actor }
 import lighthouse.utils.Loggable
 import spray.can.Http
 import spray.http.HttpMethods._
@@ -10,15 +10,15 @@ import lighthouse.model._
 
 class Service(
   resourceMap: Map[LightHouse#Resource, LightHouse#Path]) extends Actor
-with Loggable {
+  with Loggable {
 
   log.info(s"Resource map : $resourceMap")
 
   val resourceActors: Map[LightHouse#Path, ActorRef] =
-  resourceMap.map {
-    case (resource, path) =>
-      s"$path$resource" -> context.actorOf(Stateful[ResourceValue](resource, path))
-  }
+    resourceMap.map {
+      case (resource, path) =>
+        s"$path$resource" -> context.actorOf(Stateful[ResourceValue](resource, path,deciduous = true))
+    }
 
   log.info(s"Resource actors : $resourceActors")
 
@@ -27,12 +27,12 @@ with Loggable {
     case conn: Http.Connected =>
       // when a new connection comes in we register ourselves as the connection handler
       log.info(s"Incomming connection " +
-      s"[From] ${conn.remoteAddress} " +
-      s"[To] ${conn.localAddress}")
+        s"[From] ${conn.remoteAddress} " +
+        s"[To] ${conn.localAddress}")
       sender ! Http.Register(self)
 
     case req @ HttpRequest(GET, uri, _, _, _) if uri.toRelative.toString() == "/" =>
-      sender() ! HttpResponse(entity="Lighthouse is up!")
+      sender() ! HttpResponse(entity = "Lighthouse is up!")
 
     case req: HttpRequest =>
       val target = resourceActors.get(req.uri.toRelative.toString())
