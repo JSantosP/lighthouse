@@ -44,7 +44,9 @@ trait Stateful[S] extends Actor with Loggable {
       log.info(s"Received : $req")
       sender() ! state.fold(ifEmpty = HttpResponse(status = 204)) {
         case (s, _) =>
-          HttpResponse(entity = implicitly[JsonFormat[S]].write(s).toString())
+          HttpResponse(entity = HttpEntity(
+            `application/json`,
+            implicitly[JsonFormat[S]].write(s).toString()))
       }
 
     case req @ HttpRequest(PUT, uri, headers, HttpEntity.NonEmpty(contentType, entity), _) if uri.toRelative.toString() == path && contentType == `application/json` =>

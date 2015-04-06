@@ -28,7 +28,7 @@ class StatefulTest extends lighthouse.TestKitSpec {
       List[HttpHeader](),
       "",
       HttpProtocols.`HTTP/1.1`)
-    val Seq(resp @ HttpResponse(code,HttpEntity.NonEmpty(_,data),_,_)) = receiveN(1)
+    val Seq(resp @ HttpResponse(code,HttpEntity.NonEmpty(`application/json`,data),_,_)) = receiveN(1)
     val response = new String(data.toByteArray).parseJson
     code should equal(StatusCode.int2StatusCode(200))
     fooSer.read(response) should equal(foo1)
