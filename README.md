@@ -71,5 +71,4 @@ Response:
 - Deploy of diferent value types
 - Security!
 - Pretty index page :-)
-- Add TTL to values.
 - ...
